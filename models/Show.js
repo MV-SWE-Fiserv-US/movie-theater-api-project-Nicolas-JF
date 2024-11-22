@@ -1,13 +1,24 @@
-// import our db, Model, DataTypes
-const { db, DataTypes } = require('../db/connection')
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-// Creating a User child class from the Model parent class
-const Show = db.define('shows', {
-  title: DataTypes.STRING,
-  genre: DataTypes.STRING,
-  rating: DataTypes.INTEGER,
-  available: DataTypes.BOOLEAN
-})
+class Show extends Model {}
 
-// exports
-module.exports = Show
+Show.init({
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  genre: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  available: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  }
+}, {
+  sequelize,
+  modelName: 'Show'
+});
+
+module.exports = Show;
