@@ -53,3 +53,19 @@ router.put('/:userId/shows/:showId', async (req, res) => {
 });
 
 module.exports = router;
+
+const { check, validationResult } = require('express-validator');
+
+router.post(
+  '/',
+  [
+    check('name').notEmpty().withMessage('Name is required'),
+    check('email').isEmail().withMessage('Email must be valid'),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+  }
+);
