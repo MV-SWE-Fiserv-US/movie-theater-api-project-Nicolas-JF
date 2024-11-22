@@ -1,58 +1,78 @@
 const express = require('express');
-const { validationResult, check } = require('express-validator');
-const Show = require('../models/Show');
-const User = require('../models/User');
+const { Show, User } = require('../models');
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const shows = await Show.findAll();
-  res.json(shows);
+  try {
+    const shows = await Show.findAll();
+    res.json(shows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve shows' });
+  }
 });
 
 router.get('/:id', async (req, res) => {
-  const show = await Show.findByPk(req.params.id);
-  if (show) {
+  try {
+    const show = await Show.findByPk(req.params.id);
+    if (!show) {
+      return res.status(404).json({ error: 'Show not found' });
+    }
     res.json(show);
-  } else {
-    res.status(404).json({ error: 'Show not found' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve show' });
   }
 });
 
 router.get('/:id/users', async (req, res) => {
-  const show = await Show.findByPk(req.params.id, { include: User });
-  if (show) {
-    res.json(show.users);
-  } else {
-    res.status(404).json({ error: 'Show not found' });
+  try {
+    const show = await Show.findByPk(req.params.id);
+    if (!show) {
+      return res.status(404).json({ error: 'Show not found' });
+    }
+    const users = await show.getUsers();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve users' });
   }
 });
 
-router.put('/:id', async (req, res) => {
-  const show = await Show.findByPk(req.params.id);
-  if (show) {
+router.put('/:id/available', async (req, res) => {
+  try {
+    const show = await Show.findByPk(req.params.id);
+    if (!show) {
+      return res.status(404).json({ error: 'Show not found' });
+    }
     show.available = req.body.available;
     await show.save();
     res.json(show);
-  } else {
-    res.status(404).json({ error: 'Show not found' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update show availability' });
   }
 });
 
 router.delete('/:id', async (req, res) => {
-  const show = await Show.findByPk(req.params.id);
-  if (show) {
+  try {
+    const show = await Show.findByPk(req.params.id);
+    if (!show) {
+      return res.status(404).json({ error: 'Show not found' });
+    }
     await show.destroy();
-    res.status(204).end();
-  } else {
-    res.status(404).json({ error: 'Show not found' });
+    res.status(200).json({ message: 'Show deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete show' });
   }
 });
 
-router.get('/', async (req, res) => {
-  const genre = req.query.genre;
-  const shows = await Show.findAll({ where: { genre } });
-  res.json(shows);
+router.get('/:genre', async (req, res) => {
+  try {
+    const shows = await Show.findAll({
+      where: { genre: req.params.genre },
+    });
+    res.json(shows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve shows by genre' });
+  }
 });
 
 module.exports = router;
